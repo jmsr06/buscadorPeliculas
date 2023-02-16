@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Card from './components/Card'
+import Loader from './components/Loader'
 import Paginador from './components/Paginador'
 const API_KEY = '4287ad07'
 
 function App() {
+  const [loader, setLoader] = useState(false)
   const [search, setSearch] = useState('')
   const [movies, setMovies] = useState([])
   const [error, setError] = useState('')
@@ -29,6 +31,7 @@ function App() {
   }, [order])
 
   useEffect(() => {
+    setLoader(true)
     fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${search}&type=movie&page=${page}`)
       .then((res) => res.json())
       .then((data) => {
@@ -44,7 +47,8 @@ function App() {
             }))
           }
         }
-      })
+        setLoader(false)
+      }).catch(e => setLoader(false)) 
   }, [page])
 
 
@@ -53,6 +57,7 @@ function App() {
     e.preventDefault();
     if (search == previousSearch.current) return
     try {
+      setLoader(true)
       await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${search}&type=movie&page=${page}`)
         .then((res) => res.json())
         .then((data) => {
@@ -66,6 +71,7 @@ function App() {
               return a.Title.localeCompare(b.Title)
             }))
           }
+          setLoader(false)
         })
       previousSearch.current = search
     } catch (e) {
@@ -101,7 +107,7 @@ function App() {
   return (
     <div className="App bg-black py-20 px-5 md:p-28 w-full h-full">
       <h1 className='text-center text-white text-3xl font-bold'>Buscador de películas <i className="fa-solid fa-clapperboard"></i></h1>
-      <form className='text-center my-10' onSubmit={handleSubmit}>
+      <form className='text-center my-10' onSubmit={ handleSubmit }>
         <input value={search} onChange={handleSearch} placeholder='nombre de la película' className='border w-1/2 md:m-4 h-9 p-2 md:p-4' />
 
         {order == 'asc' ?
@@ -119,6 +125,7 @@ function App() {
           <p className='text-white text-center col-span-2 md:col-span-3 lg:col-span-5'>{error}</p>}
       </div>
       {movies.length > 0 && <Paginador pages={pages} page={page} setPage={setPage} />}
+      {loader && <Loader />}
     </div>
   )
 }
